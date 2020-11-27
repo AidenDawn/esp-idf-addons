@@ -12,6 +12,47 @@
 
 static char tag[] = "DS3231";
 
+static uint8_t DS3231_I2C_ADDRESS_DEFAULT = (0x68); // The device's I2C address is 0x68.
+
+static uint8_t DS3231_REGISTER_SECOND = (0x00);
+static uint8_t DS3231_REGISTER_MINUTE = (0x01);
+static uint8_t DS3231_REGISTER_HOUR = (0x02);
+static uint8_t DS3231_REGISTER_DAY = (0x03);
+static uint8_t DS3231_REGISTER_DATE = (0x04);
+static uint8_t DS3231_REGISTER_MONTH = (0x05);
+static uint8_t DS3231_REGISTER_YEAR = (0x06);
+
+static uint8_t DS3231_REGISTER_ALARM1_SECOND = (0x07);
+static uint8_t DS3231_REGISTER_ALARM1_MINUTE = (0x08);
+static uint8_t DS3231_REGISTER_ALARM1_HOUR = (0X09);
+static uint8_t DS3231_REGISTER_ALARM1_DAY = (0X0A);
+static uint8_t DS3231_REGISTER_ALARM2_MINUTES = (0X0B);
+static uint8_t DS3231_REGISTER_ALARM2_HOURS = (0X0C);
+static uint8_t DS3231_REGISTER_ALARM2_DAY = (0X0D);
+
+static uint8_t DS3231_REGISTER_CONTROL = (0X0E);
+static uint8_t DS3231_REGISTER_STATUS = (0X0F);
+static uint8_t DS3231_REGISTER_OFFSET = (0X10);
+static uint8_t DS3231_REGISTER_TEMP_MSB = (0X11);
+static uint8_t DS3231_REGISTER_TEMP_LSB = (0X12);
+
+static uint8_t DS3231_HOUR_12HOUR_FLAG = (0x40);
+static uint8_t DS3231_HOUR_12HOUR_MASK = (0x1f);
+static uint8_t DS3231_HOUR_PM_FLAG = (0x20);
+static uint8_t DS3231_MONTH_CENTURY_MASK = (0x1f);
+static uint8_t DS3231_MONTH_CENTURY_FLAG = (0x80);
+
+static uint8_t DS3231_STATUS_OSCILLATOR = (0x80);
+static uint8_t DS3231_STATUS_32KHZ = (0x08);
+static uint8_t DS3231_STATUS_ALARM_2 = (0x02);
+static uint8_t DS3231_STATUS_ALARM_1 = (0x01);
+
+static uint8_t DS3231_CONTROL_OSCILLATOR = (0x80);
+static uint8_t DS3231_CONTROL_TEMPCONV = (0x20);
+static uint8_t DS3231_CONTROL_ALARM_INTS = (0x04);
+static uint8_t DS3231_CONTROL_ALARM2_INT = (0x02);
+static uint8_t DS3231_CONTROL_ALARM1_INT = (0x01);
+
 uint8_t bcd2dec(uint8_t val){
     return (val >> 4) * 10 + (val & 0x0f);
 }
@@ -61,14 +102,14 @@ esp_err_t ds3231_set_time(i2c_dev_t *dev, struct tm *time){
     }
     data[6] = dec2bcd(time->tm_year);
 
-    return i2c_bus_write_bytes(dev->port, dev->addr, (uint8_t) DS3231_REGISTER_SECOND, 1, data, sizeof(data));
+    return i2c_bus_write_bytes(dev->port, dev->addr, &DS3231_REGISTER_SECOND, 1, data, sizeof(data));
 }
 
 esp_err_t ds3231_get_time(i2c_dev_t *dev, struct tm *time){
     esp_err_t ret = ESP_FAIL;
 
     uint8_t data[7];
-    if( i2c_bus_read_bytes(dev->port, dev->addr, (uint8_t) DS3231_REGISTER_SECOND, 1, data, sizeof(data)) == ESP_FAIL){
+    if( i2c_bus_read_bytes(dev->port, dev->addr, &DS3231_REGISTER_SECOND, 1, data, sizeof(data)) == ESP_FAIL){
         return ret;
     }
 
@@ -98,12 +139,12 @@ esp_err_t ds3231_get_time(i2c_dev_t *dev, struct tm *time){
 
 bool ds3231_power_lost(i2c_dev_t *dev){
     uint8_t data;
-    if(i2c_bus_read_bytes(dev->port, dev->addr, (uint8_t) DS3231_REGISTER_STATUS, 1, &data, 1) == ESP_FAIL){
+    if(i2c_bus_read_bytes(dev->port, dev->addr, &DS3231_REGISTER_STATUS, 1, &data, 1) == ESP_FAIL){
         return false;
     }
     if(data & DS3231_STATUS_OSCILLATOR){
         data &= ~DS3231_STATUS_OSCILLATOR;
-        i2c_bus_write_bytes(dev->port, dev->addr, (uint8_t*) DS3231_REGISTER_STATUS, 1, &data, 1);
+        i2c_bus_write_bytes(dev->port, dev->addr, &DS3231_REGISTER_STATUS, 1, &data, 1);
         return true;
     }
 
@@ -113,7 +154,7 @@ bool ds3231_power_lost(i2c_dev_t *dev){
 bool ds3231_clk_status(i2c_dev_t *dev){
 
     uint8_t data;
-    if(i2c_bus_read_bytes(dev->port, dev->addr, (uint8_t) DS3231_REGISTER_STATUS, 1, &data, 1) == ESP_FAIL){
+    if(i2c_bus_read_bytes(dev->port, dev->addr, &DS3231_REGISTER_STATUS, 1, &data, 1) == ESP_FAIL){
         return false;
     }
 
@@ -123,10 +164,10 @@ bool ds3231_clk_status(i2c_dev_t *dev){
 esp_err_t ds3231_enable_clk_out(i2c_dev_t *dev){
     esp_err_t ret = ESP_OK;
     uint8_t data;
-    if(!ds3231_clk_status(&dev)){
-        i2c_bus_read_bytes(dev->port, dev->addr, (uint8_t) DS3231_REGISTER_STATUS, 1, &data, 1);
+    if(!ds3231_clk_status(dev)){
+        i2c_bus_read_bytes(dev->port, dev->addr, &DS3231_REGISTER_STATUS, 1, &data, 1);
         data |= DS3231_STATUS_32KHZ;
-        ret = i2c_bus_write_bytes(dev->port, dev->addr, (uint8_t*) DS3231_REGISTER_CONTROL, 1, &data, 1);
+        ret = i2c_bus_write_bytes(dev->port, dev->addr, &DS3231_REGISTER_CONTROL, 1, &data, 1);
     }
     ESP_LOGI(tag, "32kHz output enabled");
 
@@ -137,10 +178,10 @@ esp_err_t ds3231_disable_clk_out(i2c_dev_t *dev){
     esp_err_t ret = ESP_OK;
 
     uint8_t data;
-    if(ds3231_clk_status(&dev)){
-        i2c_bus_read_bytes(dev->port, dev->addr, (uint8_t) DS3231_REGISTER_STATUS, 1, &data, 1);
+    if(ds3231_clk_status(dev)){
+        i2c_bus_read_bytes(dev->port, dev->addr, &DS3231_REGISTER_STATUS, 1, &data, 1);
         data &= ~DS3231_STATUS_32KHZ;
-        ret = i2c_bus_write_bytes(dev->port, dev->addr, (uint8_t*) DS3231_REGISTER_CONTROL, 1, &data, 1);
+        ret = i2c_bus_write_bytes(dev->port, dev->addr, &DS3231_REGISTER_CONTROL, 1, &data, 1);
     }
     ESP_LOGI(tag, "32kHz output disabled");
 
@@ -151,9 +192,9 @@ esp_err_t ds3231_enable_alarm_interrupts(i2c_dev_t *dev){
     esp_err_t ret = ESP_OK;
 
     uint8_t data;
-    ret |= i2c_bus_read_bytes(dev->port, dev->addr, (uint8_t) DS3231_REGISTER_CONTROL, 1, &data, 1);
+    ret |= i2c_bus_read_bytes(dev->port, dev->addr, &DS3231_REGISTER_CONTROL, 1, &data, 1);
     data |= DS3231_CONTROL_ALARM_INTS;
-    ret |= i2c_bus_write_bytes(dev->port, dev->addr, (uint8_t) DS3231_REGISTER_CONTROL, 1, &data, 1);
+    ret |= i2c_bus_write_bytes(dev->port, dev->addr, &DS3231_REGISTER_CONTROL, 1, &data, 1);
 
     return ret;
 }
@@ -162,9 +203,9 @@ esp_err_t ds3231_disable_alarm_interrupts(i2c_dev_t *dev){
     esp_err_t ret = ESP_OK;
 
     uint8_t data;
-    i2c_bus_read_bytes(dev->port, dev->addr, (uint8_t*) DS3231_REGISTER_CONTROL, 1, &data, 1);
+    i2c_bus_read_bytes(dev->port, dev->addr, &DS3231_REGISTER_CONTROL, 1, &data, 1);
     data &= ~DS3231_CONTROL_ALARM_INTS;
-    ret = i2c_bus_write_bytes(dev->port, dev->addr, (uint8_t*) DS3231_REGISTER_CONTROL, 1, &data, 1);
+    ret = i2c_bus_write_bytes(dev->port, dev->addr, &DS3231_REGISTER_CONTROL, 1, &data, 1);
 
     return ret;
 }
@@ -173,10 +214,10 @@ esp_err_t ds3231_set_sqw_mode(i2c_dev_t *dev, sqwPinMode_t mode){
     esp_err_t ret = ESP_OK;
 
     uint8_t data;
-    ret |= i2c_bus_read_bytes(dev->port, dev->addr, (uint8_t) DS3231_REGISTER_CONTROL, 1, &data, 1);
+    ret |= i2c_bus_read_bytes(dev->port, dev->addr, &DS3231_REGISTER_CONTROL, 1, &data, 1);
     data &= ~(eightk);
     data |= mode;
-    ret |= i2c_bus_write_bytes(dev->port, dev->addr, (uint8_t) DS3231_REGISTER_CONTROL, 1, &data, 1);
+    ret |= i2c_bus_write_bytes(dev->port, dev->addr, &DS3231_REGISTER_CONTROL, 1, &data, 1);
 
     return ret;
 }

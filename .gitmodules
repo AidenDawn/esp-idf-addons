@@ -1,3 +1,12 @@
 [submodule "u8g2"]
 	path = u8g2
 	url = https://github.com/olikraus/u8g2.git
+[submodule "esp-idf-ssd1306"]
+	path = esp-idf-ssd1306
+	url = https://github.com/nopnop2002/esp-idf-ssd1306.git
+[submodule "esp-wm8960"]
+	path = esp-wm8960
+	url = https://github.com/AidenDawn/esp-wm8960.git
+[submodule "wm8960"]
+	path = wm8960
+	url = https://github.com/AidenDawn/esp-wm8960.git
