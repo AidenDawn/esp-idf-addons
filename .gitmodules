@@ -10,3 +10,6 @@
 [submodule "wm8960"]
 	path = wm8960
 	url = https://github.com/AidenDawn/esp-wm8960.git
+[submodule "ssd1306"]
+	path = ssd1306
+	url = https://github.com/AidenDawn/esp-idf-ssd1306.git
