@@ -13,3 +13,7 @@
 [submodule "ssd1306"]
 	path = ssd1306
 	url = https://github.com/AidenDawn/esp-idf-ssd1306.git
+[submodule "arduino"]
+	path = arduino
+	url = git@ssh.github.com:AidenDawn/arduino-esp32.git
+	branch = idf-release/v4.2
