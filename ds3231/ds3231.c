@@ -68,13 +68,14 @@ static void IRAM_ATTR rtc_pps_handler(void* arg){
     gpio_set_level(TEST_LED, status);
 }
 
-esp_err_t ds3231_init(){
+esp_err_t ds3231_init(void* arg){
     esp_err_t ret = ESP_OK;
+    uint8_t DS3231_INT_GPIO = arg;
 
 	gpio_config_t rtc_int = {
         .intr_type = GPIO_PIN_INTR_POSEDGE,
         .mode = GPIO_MODE_INPUT,
-        .pin_bit_mask = (1ULL << CONFIG_DS3231_INT_GPIO),
+        .pin_bit_mask = (1ULL << DS3231_INT_GPIO),
         .pull_down_en = true,
         .pull_up_en = false,
     };
