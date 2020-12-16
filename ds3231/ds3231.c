@@ -68,14 +68,13 @@ static void IRAM_ATTR rtc_pps_handler(void* arg){
     gpio_set_level(TEST_LED, status);
 }
 
-esp_err_t ds3231_init(void* arg){
+esp_err_t ds3231_init(uint8_t int_pin){
     esp_err_t ret = ESP_OK;
-    uint8_t DS3231_INT_GPIO = arg;
 
 	gpio_config_t rtc_int = {
         .intr_type = GPIO_PIN_INTR_POSEDGE,
         .mode = GPIO_MODE_INPUT,
-        .pin_bit_mask = (1ULL << DS3231_INT_GPIO),
+        .pin_bit_mask = (1ULL << int_pin),
         .pull_down_en = true,
         .pull_up_en = false,
     };
@@ -83,7 +82,7 @@ esp_err_t ds3231_init(void* arg){
     gpio_set_direction(TEST_LED, GPIO_MODE_OUTPUT);
 
     gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);
-    gpio_isr_handler_add(CONFIG_DS3231_INT_GPIO, rtc_pps_handler, (void*) 0);
+    gpio_isr_handler_add(int_pin, rtc_pps_handler, (void*) 0);
 
     return ret;    
 }

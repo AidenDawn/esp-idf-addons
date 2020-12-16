@@ -16,7 +16,7 @@ typedef enum
     eightk = (0x18),
 } sqwPinMode_t;
 
-esp_err_t ds3231_init(void* arg);
+esp_err_t ds3231_init(uint8_t int_pin);
 esp_err_t ds3231_set_time(i2c_dev_t *dev, struct tm *time);
 esp_err_t ds3231_get_time(i2c_dev_t *dev, struct tm *time);
 
