@@ -8,6 +8,8 @@
 #define TEST_LED 16
 #define ESP_INTR_FLAG_DEFAULT 0
 
+i2c_dev_t ds3231_rtc;
+
 typedef enum
 {
     one = (0x00),
