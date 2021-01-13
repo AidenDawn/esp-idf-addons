@@ -91,7 +91,7 @@ esp_err_t i2c_bus_write_bytes(i2c_port_t port, i2c_addr_t addr, uint8_t *reg, in
     i2c_master_write(cmd, reg, reglen, I2C_MASTER_ACK);
     i2c_master_write(cmd, txdata, txlen, I2C_MASTER_ACK);
     i2c_master_stop(cmd);
-    ret = i2c_master_cmd_begin(port, cmd, 1000 / portTICK_RATE_MS);
+    ret = i2c_master_cmd_begin(port, cmd, 100 / portTICK_RATE_MS);
     i2c_cmd_link_delete(cmd);
     xSemaphoreGive(_busLock);
     I2C_BUS_CHECK(ret == 0, "I2C Bus WriteReg Error", ESP_FAIL);
@@ -109,7 +109,7 @@ esp_err_t i2c_bus_write_data(i2c_port_t port, i2c_addr_t addr, void *txdata, uin
     i2c_master_write_byte(cmd, (addr << 1) | I2C_MASTER_WRITE, I2C_MASTER_ACK);
     i2c_master_write(cmd, txdata, txlen, I2C_MASTER_ACK);
     i2c_master_stop(cmd);
-    ret = i2c_master_cmd_begin(port, cmd, 1000 / portTICK_RATE_MS);
+    ret = i2c_master_cmd_begin(port, cmd, 100 / portTICK_RATE_MS);
     i2c_cmd_link_delete(cmd);
     xSemaphoreGive(_busLock);
     I2C_BUS_CHECK(ret == 0, "I2C Bus Write Error", ESP_FAIL);
@@ -133,7 +133,7 @@ esp_err_t i2c_bus_read_bytes(i2c_port_t port, i2c_addr_t addr,  uint8_t *reg, in
     }
     i2c_master_read_byte(cmd, rxdata + rxlen - 1, I2C_MASTER_NACK);
     i2c_master_stop(cmd);
-    ret = i2c_master_cmd_begin(port, cmd, 1000 / portTICK_RATE_MS);
+    ret = i2c_master_cmd_begin(port, cmd, 100 / portTICK_RATE_MS);
     i2c_cmd_link_delete(cmd);
     xSemaphoreGive(_busLock);
     I2C_BUS_CHECK(ret == 0, "I2C Bus ReadReg Error", ESP_FAIL);
@@ -155,10 +155,27 @@ esp_err_t i2c_bus_read_data(i2c_port_t port, i2c_addr_t addr, void *rxdata, uint
     }
     i2c_master_read_byte(cmd, rxdata + rxlen - 1, I2C_MASTER_NACK);
     i2c_master_stop(cmd);
-    ret = i2c_master_cmd_begin(port, cmd, 1000 / portTICK_RATE_MS);
+    ret = i2c_master_cmd_begin(port, cmd, 100 / portTICK_RATE_MS);
     i2c_cmd_link_delete(cmd);
     xSemaphoreGive(_busLock);
     I2C_BUS_CHECK(ret == 0, "I2C Bus Read Error", ESP_FAIL);
+    return ret;
+}
+
+esp_err_t i2c_bus_scan(i2c_port_t port, i2c_addr_t addr)
+{
+    I2C_BUS_CHECK(port < I2C_NUM_MAX, "I2C port error", ESP_FAIL);
+    esp_err_t ret;
+    while (xSemaphoreTake(_busLock, portMAX_DELAY) != pdPASS);
+    i2c_cmd_handle_t cmd;
+    cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (addr << 1) | I2C_MASTER_WRITE, I2C_MASTER_NACK);
+    i2c_master_stop(cmd);
+    ret = i2c_master_cmd_begin(port, cmd, 100 / portTICK_RATE_MS);
+    i2c_cmd_link_delete(cmd);
+    xSemaphoreGive(_busLock);
+    //I2C_BUS_CHECK(ret == ESP_OK, "I2C Bus Scan Error", ESP_FAIL);
     return ret;
 }
 

@@ -33,6 +33,8 @@ esp_err_t i2c_bus_write_data(i2c_port_t port, i2c_addr_t addr, void *txdata, uin
 esp_err_t i2c_bus_read_bytes(i2c_port_t port, i2c_addr_t addr,  uint8_t *reg, int reglen, void *rxdata, uint8_t rxlen);
 esp_err_t i2c_bus_read_data(i2c_port_t port, i2c_addr_t addr, void *rxdata, uint8_t rxlen);
 
+esp_err_t i2c_bus_scan(i2c_port_t port, i2c_addr_t addr);
+
 /**
  * @brief Delete and release the I2C bus object
  *
